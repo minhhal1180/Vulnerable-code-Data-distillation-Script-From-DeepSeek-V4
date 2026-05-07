@@ -12,14 +12,6 @@
 | `dpo_val.jsonl` | **214** | 840 KB | In-distribution DPO eval |
 | `dpo_test.jsonl` | **105** | 414 KB | In-distribution DPO held-out test |
 
-### Backup / reference files
-| File | Records | Purpose |
-|---|---|---|
-| `sft_train_shuffled.jsonl.full` | 2839 | Pre-split full SFT |
-| `dpo_train_shuffled.jsonl.full` | 2131 | Pre-split full DPO |
-| `sft_final.jsonl`, `dpo_final.jsonl` | — | Pre-validation raw |
-| `rejected.jsonl` | — | Records dropped (with reasons) |
-
 ## Validation strategy — TWO-TIER
 
 **1. In-distribution** (`sft_val.jsonl` + `sft_test.jsonl`):
@@ -40,17 +32,6 @@
 - **7-tag analysis schema**: SINK, DESTINATION, SOURCE, CONSTRAINTS, SCRATCHPAD, MATH, CONCLUSION
 - **4 complexity levels**: Foundational → Expert
 - **Architecture**: x86_64 Linux LP64 (pointer/long=8B, int=4B, short=2B, char=1B)
-
-## Quality guarantees (Qwen-safe)
-
-- ✅ No `<|im_start|>`, `<|im_end|>`, `<|endoftext|>`, `<|fim_*|>` token collisions
-- ✅ UTF-8 NFKC normalized, BOM stripped, control chars filtered
-- ✅ All 7 tags present in every analysis
-- ✅ Length-bounded: max ~7400 chars (~2100 tokens) — fits 4k context
-- ✅ Deduplicated: snippet-hash + first-200-chars analysis fingerprint
-- ✅ Gold val deduplicated against train (zero overlap verified)
-- ✅ DPO label-flip verified: chosen ≠ rejected conclusion (100%)
-- ✅ DPO length ratio < 3.0×
 
 ## Distribution (SFT train, 2414 records)
 
@@ -100,89 +81,6 @@ Standard C:    ~66%   (classic stdlib functions)
 Juliet (real):              ~700  (29%)  - real CWE-labeled C files
 DiverseVul (real):          ~750  (31%)  - de-tokenized CVE functions
 Synthetic (Pro+Flash):      ~960  (40%)  - 5 diversity profiles + L4 push + C++ boost
-```
-
-## Recommended training config
-
-```python
-# SFT — Qwen2.5-Coder-7B-Instruct
-from transformers import TrainingArguments
-from peft import LoraConfig
-from datasets import load_dataset
-
-ds = load_dataset("json", data_files={
-    "train":      "sft_train.jsonl",
-    "validation": "sft_val.jsonl",
-    "test":       "sft_test.jsonl",
-    "gold":       "sft_val_gold.jsonl",   # held-out benchmark
-})
-
-lora_config = LoraConfig(
-    r=16, lora_alpha=32, lora_dropout=0.05,
-    target_modules=["q_proj","k_proj","v_proj","o_proj",
-                    "gate_proj","up_proj","down_proj"],
-    task_type="CAUSAL_LM",
-)
-
-training_args = TrainingArguments(
-    output_dir="./qwen-cwe-lora",
-    num_train_epochs=3,
-    per_device_train_batch_size=4,
-    gradient_accumulation_steps=4,        # effective batch = 16
-    learning_rate=2e-4,
-    warmup_ratio=0.05,
-    lr_scheduler_type="cosine",
-    eval_strategy="steps", eval_steps=100,
-    save_strategy="steps", save_steps=200,
-    logging_steps=20,
-    bf16=True,
-    max_seq_length=4096,
-)
-
-# DPO (after SFT)
-dpo_args = dict(
-    beta=0.1,
-    learning_rate=5e-6,
-    num_train_epochs=1,
-    per_device_train_batch_size=2,
-    gradient_accumulation_steps=8,
-)
-```
-
-## Schema reference
-
-### SFT (ShareGPT format)
-```json
-{
-  "messages": [
-    {"role": "system",    "content": "<paradigm-specific system prompt>"},
-    {"role": "user",      "content": "...<slice>{C/C++ code}</slice>..."},
-    {"role": "assistant", "content": "[SINK]: ...\n... [CONCLUSION]: VULNERABLE CWE-XXX"}
-  ],
-  "metadata": {
-    "snippet_id": "...", "cwe_id": "CWE-XXX",
-    "complexity_level": "Level 2|3|4",
-    "paradigm": "linear|tree_of_thoughts|counterfactual|reflexion|execution_trace",
-    "ground_truth_label": 0,
-    "label_verified": true,
-    "domain": "..."
-  }
-}
-```
-
-### DPO
-```json
-{
-  "instruction": "...<slice>...</slice>...",
-  "chosen":      "[SINK]: ...\n[CONCLUSION]: VULNERABLE CWE-XXX",
-  "rejected":    "[SINK]: ...\n[CONCLUSION]: NOT_VULNERABLE CWE-XXX",
-  "metadata": {
-    "fallacy_type": "loop bound off-by-one|...",
-    "fallacy_method": "mechanical_perturbation|api_post_hoc",
-    "snippet_id": "...", "cwe_id": "CWE-XXX",
-    "ground_truth_label": 0
-  }
-}
 ```
 
 ## 7-Tag analysis format
