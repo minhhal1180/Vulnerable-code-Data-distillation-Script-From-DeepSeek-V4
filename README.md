@@ -138,21 +138,6 @@ python convert.py --to hf-push --in data/ --hf-repo your-name/cwe-memory-safety
 DeepSeek-V4-compatible chat-completions endpoint (DeepSeek API,
 self-hosted vLLM, OpenRouter, etc.).
 
-```bash
-# Set credentials in .env or export them
-echo "DEEPSEEK_API_KEY=sk-..." > .env
-# Optional overrides:
-# DEEPSEEK_API_BASE=https://api.deepseek.com
-# DEEPSEEK_MODEL_FLASH=deepseek-chat
-# DEEPSEEK_MODEL_PRO=deepseek-reasoner
-
-# Cheapest run: 200 SFT records, Flash only, $1 cap
-python generate.py --sft 200 --budget 1.00 --out data_new
-
-# Larger run with Pro thinking on hard paradigms + DPO
-python generate.py --sft 3000 --dpo --pro --budget 5.00 --out data_new
-```
-
 Pipeline (per spec):
 
 1. Synthesize a labeled C/C++ snippet with a `[TARGET_SINK]` marker.
