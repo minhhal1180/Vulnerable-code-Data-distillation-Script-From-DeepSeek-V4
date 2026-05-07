@@ -111,27 +111,6 @@ and a recommended LoRA training config.
 
 ---
 
-## Convert / inspect
-
-```bash
-# Distribution stats
-python convert.py --stats --in data/train/sft_train.jsonl
-
-# Peek at a record
-python convert.py --peek 1 --in data/train/sft_train.jsonl
-
-# Convert to other formats
-python convert.py --to alpaca     --in data/train/sft_train.jsonl --out alpaca.jsonl
-python convert.py --to chatml     --in data/train/sft_train.jsonl --out chatml.txt
-python convert.py --to openai     --in data/train/sft_train.jsonl --out openai.jsonl
-python convert.py --to preference --in data/train/dpo_train.jsonl --out pref.jsonl
-
-# Push to HuggingFace Hub
-python convert.py --to hf-push --in data/ --hf-repo your-name/cwe-memory-safety
-```
-
----
-
 ## Generate (regenerate / extend)
 
 `generate.py` is self-contained and works against any
