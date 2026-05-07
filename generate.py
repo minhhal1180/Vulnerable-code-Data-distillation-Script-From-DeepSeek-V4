@@ -483,10 +483,6 @@ def perturb_for_dpo(record: dict) -> dict | None:
         },
     }
 
-
-# ════════════════════════════════════════════════════════════════════════════
-#  ORCHESTRATION
-# ════════════════════════════════════════════════════════════════════════════
 def _hid(*parts: Any) -> str:
     return hashlib.sha256("|".join(map(str, parts)).encode()).hexdigest()[:16]
 
