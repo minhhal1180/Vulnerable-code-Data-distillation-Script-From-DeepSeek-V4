@@ -1,0 +1,30 @@
+# Secrets — never commit your API key
+.env
+.env.*
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+
+# Generation outputs (default --out paths from generate.py)
+data_new/
+out/
+output/
+logs/
+*.log
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Large source corpora — exceed GitHub's 100MB/file limit.
+# Available on the HuggingFace dataset mirror.
+source/juliet_corpus.txt
+source/diversevul_corpus.txt
