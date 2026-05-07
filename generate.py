@@ -387,7 +387,7 @@ def _quality_check(analysis: str, paradigm: str) -> str | None:
 async def generate_sft(client: APIClient, snip: Snippet, spec: SnippetSpec,
                         flash_model: str, pro_model: str | None,
                         max_attempts: int = 2) -> dict | None:
-    """Returns a ShareGPT record on success, or None."""
+    
     use_pro = (spec.paradigm in PARADIGMS_HARD) and (pro_model is not None)
     model = pro_model if use_pro else flash_model
 
@@ -412,8 +412,7 @@ async def generate_sft(client: APIClient, snip: Snippet, spec: SnippetSpec,
         verdict = m.group(1).upper()
         predicted_label = 1 if verdict == "VULNERABLE" else 0
         if predicted_label != spec.label:
-            # Repair the conclusion to match ground truth — preserves reasoning,
-            # ensures training signal is correct.
+          
             new_verdict = "VULNERABLE" if spec.label == 1 else "NOT_VULNERABLE"
             new = f"[CONCLUSION]: {new_verdict} CWE-{m.group(2)}"
             analysis = analysis[:m.start()] + new + analysis[m.end():]
@@ -438,7 +437,7 @@ async def generate_sft(client: APIClient, snip: Snippet, spec: SnippetSpec,
     return None
 
 
-# ── DPO mechanical perturbation ──────────────────────────────────────────────
+
 def perturb_for_dpo(record: dict) -> dict | None:
     """Build a DPO triple from an SFT record by flipping the conclusion and
     inserting a subtle reasoning fallacy in the [SCRATCHPAD]."""
