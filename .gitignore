@@ -28,3 +28,5 @@ Thumbs.db
 # Available on the HuggingFace dataset mirror.
 source/juliet_corpus.txt
 source/diversevul_corpus.txt
+auth_hf.py
+push_hf.py
